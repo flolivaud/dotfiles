@@ -51,18 +51,21 @@ in
     fzf
     oh-my-zsh
     teams
-    slack
+    slack-dark
     powerline
-    gnome3.gnome-terminal
     vscode
     jetbrains.phpstorm
     php
     google-chrome
     remmina
     arc-theme
+    flat-remix-icon-theme 
     parcellite
     ripgrep
     fd
+    gnome3.dconf-editor
+    meld
+    pssh
   ];
 
   programs.bash.enable = true;
@@ -71,7 +74,80 @@ in
   xdg.enable = true;
   xdg.mime.enable = true;
 
-#  programs.gnome3.chrome-gnome-shell.enable = true;
+  xdg.configFile."parcellite/parcelliterc".text = ''
+    [rc]
+	RCVersion=1
+	use_copy=true
+	use_primary=false
+	synchronize=false
+	save_history=true
+	history_pos=false
+	history_x=1
+	history_y=1
+	history_limit=25
+	data_size=0
+	item_size=5
+	automatic_paste=true
+	auto_key=true
+	auto_mouse=false
+	key_input=false
+	restore_empty=false
+	rc_edit=false
+	type_search=false
+	case_search=false
+	ignore_whiteonly=false
+	trim_wspace_begend=false
+	trim_newline=false
+	hyperlinks_only=false
+	confirm_clear=true
+	current_on_top=true
+	single_line=true
+	reverse_history=false
+	item_length=50
+	persistent_history=false
+	persistent_separate=false
+	persistent_on_top=false
+	persistent_delim=\\n
+	nonprint_disp=false
+	ellipsize=2
+	multi_user=false
+	icon_name=parcellite
+	menu_key=<Ctrl><Alt>P
+	history_key=<Ctrl><Shift>V
+	phistory_key=<Ctrl><Alt>X
+	actions_key=<Ctrl><Alt>A 
+  '';
+
+  gtk = {
+    enable = true;
+
+    theme = {
+      package = pkgs.arc-theme;
+      name = "Arc-Dark";
+    };
+
+    iconTheme = {
+      package = pkgs.flat-remix-icon-theme;
+      name = "Flat-Remix-Blue-Dark";
+    };
+  }; 
+
+  dconf.settings = let dconfPath = "org/gnome/terminal/legacy";
+  in {
+      "${dconfPath}/keybindings" = {
+		 paste = "<Primary>v"; 
+	  };
+  };
+  programs.gnome-terminal = {
+    enable = true;
+    profile = {
+      "b1dcc9dd-5262-4d8d-a863-c897e6d979b9" = {
+        visibleName = "Florent";
+        default = true;
+        customCommand = "tmux";
+      };
+    };
+  };
 
   programs.git = {
     enable = true;
