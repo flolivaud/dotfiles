@@ -54,11 +54,15 @@ in
     slack
     powerline
     gnome3.gnome-terminal
-    gnome3.gnome-tweaks
-    gnomeExtensions.dash-to-dock
     vscode
     jetbrains.phpstorm
     php
+    google-chrome
+    remmina
+    arc-theme
+    parcellite
+    ripgrep
+    fd
   ];
 
   programs.bash.enable = true;
@@ -66,6 +70,8 @@ in
   xsession.windowManager.command = "true";
   xdg.enable = true;
   xdg.mime.enable = true;
+
+#  programs.gnome3.chrome-gnome-shell.enable = true;
 
   programs.git = {
     enable = true;
