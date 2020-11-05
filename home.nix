@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, stdenv, fetchurl, ... }:
 
 let
 
@@ -12,6 +12,22 @@ let
   };
 
   oldpkgs = import oldpkgsSrc {};
+
+  #user-theme-gnome-shell = pkgs.stdenv.mkDerivation rec {
+  #  name = "user-theme";
+  #  uuid = "${name}@gnome-shell-extensions.gcampax.github.com";
+  #  src = fetchurl {
+  #    url = "https://extensions.gnome.org/extension-data/user-themegnome-shell-extensions.gcampax.github.com.v41.shell-extension.zip";
+  #    sha256 = "0l2j42ba7v866iknygamnkiq7igh0fjvq92r93cslvvfnkx2ccq0";
+  #  };
+
+  #  nativeBuildInputs = [ unzip ];
+  #  buildInputs = [ unzip ];
+  #  installPhase = ''
+  #    unzip 
+  #    mkdir -p $out/
+  #  '';
+  #};
 
 in
 {
@@ -38,7 +54,7 @@ in
   # changes in each release.
   home.stateVersion = "20.09";
 
-  nixpkgs.config = { allowUnfree = true; };
+  nixpkgs.config = { allowUnfree = true; allowBroken = true; };
 
   # Enable settings that make home manager work better on Linux distribs other than NixOS
   targets.genericLinux.enable = true;
@@ -53,10 +69,9 @@ in
     teams
     slack-dark
     powerline
-    vscode
     jetbrains.phpstorm
     php
-    google-chrome
+    php73Packages.composer 
     remmina
     arc-theme
     flat-remix-icon-theme 
@@ -66,6 +81,9 @@ in
     gnome3.dconf-editor
     meld
     pssh
+    gnomeExtensions.dash-to-dock
+    gnomeExtensions.topicons-plus
+    gnome3.gnome-shell-extensions
   ];
 
   programs.bash.enable = true;
@@ -132,12 +150,91 @@ in
     };
   }; 
 
+  programs.vscode = {
+    enable = true;
+  	extensions = with pkgs.vscode-extensions; [
+    ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+        {
+          name = "vscode-intelephense-client";
+          publisher = "bmewburn";
+          version = "1.5.4";
+          sha256 = "11a83vh8bch2pdpqa53bksiqpfkcw7mhv698pa0ddkd9hqwz4zn2";
+        }
+        {
+          name = "base16-themes";
+          publisher = "AndrsDC";
+          version = "1.4.5";
+          sha256 = "0qxxhhjr2hj60spy7cv995m1px5z6m2syhxsnfl1wj2aqkwp32cs";
+        }
+        {
+          name = "intellij-idea-keybindings";
+          publisher = "k--kato";
+          version = "0.2.41";
+          sha256 = "1xz3s2vj0h0f4s2j60qysz6f82h97b4xb7q1y872kyrq46h31a0f";
+        }
+        {
+          name = "Nix";
+          publisher = "bbenoist";
+          version = "1.0.1";
+          sha256 = "0zd0n9f5z1f0ckzfjr38xw2zzmcxg1gjrava7yahg5cvdcw6l35b";
+        }
+      ];
+    userSettings = {
+      workbench.colorTheme = "Base16 Dark Eighties";
+    };
+  };
+
+  programs.chromium = {
+    enable = true;
+    package = pkgs.google-chrome;
+    extensions = [
+      "kbfnbcaeplbcioakkpcpgfkobkghlhen" # grammarly
+      "cjpalhdlnbpafiamejdnhcphjbkeiagm" # ublock origin
+      "bcjindcccaagfpapjjmafapmmgkkhgoa" # json formatter
+    ];
+  };
+
   dconf.settings = let dconfPath = "org/gnome/terminal/legacy";
   in {
       "${dconfPath}/keybindings" = {
-		 paste = "<Primary>v"; 
-	  };
+        paste = "<Primary>v"; 
+      };
+      "org/gnome/shell/extensions/dash-to-dock" = {
+        custom-theme-shrink = false;
+        dash-max-icon-size = 32;
+        dock-fixed = false;
+        dock-position = "BOTTOM";
+        extend-height = false;
+        force-straight-corner = true;
+        multi-monitor = true;
+        preferred-monitor = 2;
+        show-show-apps-button = false;
+      };
+      "org/gnome/shell/extensions/topicons" = {
+        tray-pos = "right";
+      };
+      "org/gnome/shell/extensions/user-theme" = {
+        name = "Arc-Dark";
+      };
+      "org/gnome/shell" = {
+        enabled-extensions = [
+          #"dash-to-dock@micxgx.gmail.com"
+          "ubuntu-appindicators@ubuntu.com"
+          "ubuntu-dock@ubuntu.com"
+          "permanent-notifications@bonzini.gnu.org"
+          "TopIcons@phocean.net"
+          #"user-theme@gnome-shell-extensions.gcampax.github.com"
+        ];
+        favorite-apps = [
+          "org.gnome.Nautilus.desktop"
+          "google-chrome.desktop"
+          "slack.desktop"
+          "teams.desktop"
+          "org.gnome.Terminal.desktop"
+        ];
+      };
   };
+
   programs.gnome-terminal = {
     enable = true;
     profile = {
@@ -152,8 +249,15 @@ in
   programs.git = {
     enable = true;
     package = pkgs.gitAndTools.gitFull;
+    userEmail = "florent.olivaud@amersports.com";
+    userName = "Florent OLIVAUD";
     extraConfig = {
       credential.helper = "libsecret";
+      merge."composer" = {
+        name = "composer JSON file merge driver";
+        driver = "~/.config/composer/vendor/bin/composer-git-merge-driver %O %A %B %L %P";
+        recursive = "binary";
+      };
     };
   };
 
@@ -176,6 +280,7 @@ in
     profileExtra = ''
       # Add bin in PATH if not already existing
       [[ ":$PATH:" != *":$HOME/bin:"* ]] && export PATH="$PATH:$HOME/bin"
+      [[ ":$PATH:" != *":$HOME/Projects/ecom/magento2/tools/rm-scripts/bin:"* ]] && export PATH="$PATH:$HOME/Projects/ecom/magento2/tools/rm-scripts/bin"
     '';
 
     shellAliases = {
